@@ -1,5 +1,5 @@
-## Interface: 11403
-## Version: 1.14.3
+## Interface: 11502
+## Version: 1.15.2
 ## Title: Attack Score Calculator
 ## Notes: An addon to calculate the attack power score of rogue items
 ## Author: kagemusha558

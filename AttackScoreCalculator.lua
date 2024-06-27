@@ -1,4 +1,4 @@
-
+-- Gets the values of simple attributes like agility, strength etc.
 local function GetNumber(line, attribute)
     if not (string.find(line, attribute) == nil) then
         local number = string.match(line, "%d+")
@@ -7,7 +7,9 @@ local function GetNumber(line, attribute)
     return nil
 end
 
+-- Gets the values of % hit and % crit that needs to parsed a bit more
 local function GetEquipBonuses(line, attribute)
+    -- string.find(line, "Equip") is to avoid set bonuses. I might implement this in the future.
     if (string.find(line, "Equip") and string.find(line, attribute)) then
         local number = string.match(line, "%d+")
         return tonumber(number)
@@ -15,8 +17,15 @@ local function GetEquipBonuses(line, attribute)
     return nil
 end
 
-GetAttributes = function(tooltip, msg)
-    local itemType = select(6, GetItemInfo(msg));
+-- This function returns the player class (rogue = 4) to avoid players getting numbers on other classes.
+local function GetPlayerClass()
+    local localizedClass, englishClass, classIndex = UnitClass("player");
+    return classIndex;
+end
+
+-- This function collects all of the attributes on a tooltip and converts it into raw ap
+GetAttributes = function(tooltip, itemLink_)
+    local itemType = select(6, GetItemInfo(itemLink_));
     if (itemType == "Armor") then
         local tooltipName = tooltip:GetName()
         local attrs = {
@@ -40,19 +49,23 @@ GetAttributes = function(tooltip, msg)
         local formattedAp = string.format("%.2f", totalAp);
         return formattedAp;
     else
+        -- A simple return value for a check in the hookscript
         return -1;
     end
 end
 
+-- Creating a tooltip frame
 CreateFrame( "GameTooltip", "ScanningTooltip", nil, "GameTooltipTemplate" );
-ScanningTooltip:SetOwner( WorldFrame, "ANCHOR_NONE" );
-ScanningTooltip:AddFontStrings(ScanningTooltip:CreateFontString( "$parentTextLeft1", nil, "GameTooltipText" ), ScanningTooltip:CreateFontString( "$parentTextRight1", nil, "GameTooltipText" ) );
-
 local ap = 0;
-GameTooltip:HookScript("OnTooltipSetItem", function(self)
-    local itemName, itemLink = self:GetItem();
-    ap = GetAttributes(self, itemLink);
-    if not (ap == -1) then
-        self:AddLine("Total power score: " .. ap);
+-- Creating custom script that will run when a tooltip is shown in-game
+GameTooltip:HookScript("OnTooltipSetItem",
+function(self)
+    local class = GetPlayerClass();
+    if (class == 4) then
+        local itemName, itemLink = self:GetItem();
+        ap = GetAttributes(self, itemLink);
+        if not (ap == -1) then
+            self:AddLine("Total power score: " .. ap);
+        end
     end
 end)
